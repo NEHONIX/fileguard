@@ -1,0 +1,49 @@
+{
+  "name": "nehonix-fileguard",
+  "version": "1.0.0",
+  "description": "an ultra-secure file management library in nxs format with advanced encryption capabilities and integrated compression.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "test:security": "jest --testMatch='**/tests/**/*.security.test.ts'",
+    "lint": "eslint src/**/*.ts",
+    "prepare": "npm run build",
+    "demo": "ts-node src/demo.ts",
+    "demo:ultra-secure": "ts-node src/ultra-secure-demo.ts",
+    "demo:ultimate-security": "ts-node src/ultimate-security-demo.ts",
+    "demo:simple": "ts-node src/simple-security-demo.ts",
+    "demo:binary": "ts-node src/binary-security-demo.ts",
+    "demo:binary-format": "ts-node src/binary-format-demo.ts"
+  },
+  "keywords": [
+    "encryption",
+    "security",
+    "file",
+    "compression",
+    "nxs"
+  ],
+  "author": "NEHONIX",
+  "license": "MIT",
+  "type": "commonjs",
+  "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.15.21",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.3.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "argon2": "^0.43.0",
+    "crypto-js": "^4.2.0",
+    "fortify2-js": "^1.0.1",
+    "nehoid": "^2.0.0"
+  }
+}
