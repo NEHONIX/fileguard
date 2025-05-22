@@ -19,7 +19,9 @@
     "demo:ultimate-security": "ts-node src/ultimate-security-demo.ts",
     "demo:simple": "ts-node src/simple-security-demo.ts",
     "demo:binary": "ts-node src/binary-security-demo.ts",
-    "demo:binary-format": "ts-node src/binary-format-demo.ts"
+    "demo:binary-format": "ts-node src/binary-format-demo.ts",
+    "demo:simple-binary": "ts-node src/simple-binary-demo.ts",
+    "demo:integrated-binary": "ts-node src/integrated-binary-demo.ts"
   },
   "keywords": [
     "encryption",

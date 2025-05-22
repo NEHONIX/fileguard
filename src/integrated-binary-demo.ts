@@ -1,34 +1,31 @@
 /**
- * Binary Format Demo for NEHONIX FileGuard
+ * Integrated Binary Format Demo for NEHONIX FileGuard
  *
- * This demo showcases the integrated binary secure format that makes data
- * completely unreadable by humans or other systems except by the
- * FileGuardManager class itself.
+ * This demo showcases the integrated binary format in the FileGuardManager
+ * that makes data completely unreadable by humans or other systems.
  */
 
 import * as fs from "fs";
 import * as path from "path";
 import * as crypto from "crypto";
-import { FileGuardManager, createPersistentRSAFGM, logger } from "./index";
+import { FileGuardManager, logger } from "./index";
 
 // Set log level to debug for detailed output
 logger.setLogLevel("debug");
 
 // Demo configuration
-const DEMO_DIR = path.resolve("./binary-format-demo");
-const DEMO_FILE = path.join(DEMO_DIR, "binary-secure.nxs");
-const RSA_KEYS_PATH = path.join(DEMO_DIR, "binary-secure-rsa-keys.json");
+const DEMO_DIR = path.resolve("./integrated-binary-demo");
+const DEMO_FILE = path.join(DEMO_DIR, "integrated-binary.nxs");
 
 // Ensure we're using absolute paths
 console.log(`Demo directory: ${DEMO_DIR}`);
 console.log(`Demo file: ${DEMO_FILE}`);
-console.log(`RSA keys path: ${RSA_KEYS_PATH}`);
 
 /**
- * Run the binary format demo
+ * Run the integrated binary format demo
  */
-async function runBinaryFormatDemo() {
-  console.log("\n🔒 NEHONIX FileGuard BINARY FORMAT DEMO 🔒\n");
+async function runIntegratedBinaryDemo() {
+  console.log("\n🔒 NEHONIX FileGuard INTEGRATED BINARY FORMAT DEMO 🔒\n");
 
   // Create demo directory if it doesn't exist
   if (!fs.existsSync(DEMO_DIR)) {
@@ -43,17 +40,9 @@ async function runBinaryFormatDemo() {
       .substring(0, 16)}...`
   );
 
-  // Create a FileGuardManager with persistent RSA keys
-  console.log("\n📝 Creating FileGuardManager with persistent RSA keys...");
-
-  // Delete existing RSA keys to ensure we start fresh
-  if (fs.existsSync(RSA_KEYS_PATH)) {
-    fs.unlinkSync(RSA_KEYS_PATH);
-  }
-
-  const fgm = createPersistentRSAFGM(key.toString("hex"), {
-    rsaKeysPath: RSA_KEYS_PATH,
-  });
+  // Create a FileGuardManager
+  console.log("\n📝 Creating FileGuardManager...");
+  const fgm = new FileGuardManager(key.toString("hex"));
 
   // Sample data to encrypt
   const sampleData = {
@@ -81,18 +70,12 @@ async function runBinaryFormatDemo() {
   console.log("\nOriginal data:");
   console.log(JSON.stringify(sampleData, null, 2));
 
-  // Encrypt the data using the binary secure format
-  console.log("\n🔐 Encrypting data with binary secure format...");
-  const encryptResult = await fgm.saveWithBinarySecureFormat(
+  // Encrypt the data using the simple binary format
+  console.log("\n🔐 Encrypting data with simple binary format...");
+  const encryptResult = await fgm.saveWithSimpleBinaryFormat(
     DEMO_FILE,
     sampleData,
-    key,
-    fgm.rsaKeyPair,
-    {
-      layers: 5,
-      addRandomPadding: true,
-      compressionLevel: 9,
-    }
+    key
   );
 
   console.log(`\nData encrypted successfully to ${DEMO_FILE}`);
@@ -119,11 +102,7 @@ async function runBinaryFormatDemo() {
   // Decrypt the data
   console.log("\n🔓 Decrypting data...");
   try {
-    const decryptedData = await fgm.loadWithBinarySecureFormat(
-      DEMO_FILE,
-      key,
-      fgm.rsaKeyPair
-    );
+    const decryptedData = await fgm.loadWithSimpleBinaryFormat(DEMO_FILE, key);
 
     // Verify decryption was successful by checking key fields
     const isSuccessful =
@@ -139,13 +118,13 @@ async function runBinaryFormatDemo() {
     console.log("\nDecrypted data:");
     console.log(JSON.stringify(decryptedData, null, 2));
 
-    console.log("\n✅ Binary Format Demo completed successfully!");
+    console.log("\n✅ Integrated Binary Format Demo completed successfully!");
   } catch (error) {
     console.error("\n❌ Decryption failed:", error);
   }
 }
 
 // Run the demo
-runBinaryFormatDemo().catch((error) => {
+runIntegratedBinaryDemo().catch((error) => {
   console.error("Demo failed:", error);
 });

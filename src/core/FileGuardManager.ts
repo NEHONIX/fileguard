@@ -22,6 +22,7 @@ import { logger } from "../utils/logger";
 import { ProgressTracker, OperationType } from "../utils/progress";
 import { UltraSecureEncryption } from "../utils/ultraSecureEncryption";
 import { BinarySecureFormat } from "./BinarySecureFormat";
+import { SimpleBinaryFormat } from "./SimpleBinaryFormat";
 import {
   generateSecureParams,
   encryptWithFortify,
@@ -1014,6 +1015,103 @@ export class FileGuardManager {
       return await BinarySecureFormat.decrypt(fullFilepath, key, rsaKeyPair);
     } catch (error) {
       logger.error("Binary secure format decryption failed", error);
+
+      // Try fallback mode if enabled
+      if (this.fallbackMode) {
+        logger.warn("Attempting fallback recovery...");
+        return this.attemptFallbackRecovery(filepath);
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * Save data with simple binary format encryption
+   * This format makes data completely unreadable by humans or other systems.
+   *
+   * @param filepath - Path to save the encrypted file
+   * @param data - Data to encrypt
+   * @param key - Encryption key
+   * @returns Promise resolving to encryption result
+   */
+  public async saveWithSimpleBinaryFormat(
+    filepath: string,
+    data: any,
+    key: Buffer
+  ): Promise<EncryptionResult> {
+    try {
+      // Ensure filepath has .nxs extension
+      const fullFilepath = filepath.endsWith(NXS_EXTENSION)
+        ? filepath
+        : filepath + NXS_EXTENSION;
+
+      // Convert data to string if it's not already
+      const dataString = typeof data === "string" ? data : JSON.stringify(data);
+      const originalSize = Buffer.from(dataString).length;
+
+      // Use SimpleBinaryFormat for encryption
+      const result = await SimpleBinaryFormat.encrypt(data, key, fullFilepath);
+
+      if (!result) {
+        throw new Error("Simple binary format encryption failed");
+      }
+
+      // Get the encrypted file size
+      const fileStats = fs.statSync(fullFilepath);
+
+      // Return encryption result
+      return {
+        filepath: fullFilepath,
+        size: {
+          original: originalSize,
+          encrypted: fileStats.size,
+        },
+        compressionRatio: originalSize / fileStats.size,
+      };
+    } catch (error) {
+      logger.error("Simple binary format encryption failed", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Load and decrypt data with simple binary format decryption
+   *
+   * @param filepath - Path to the encrypted file
+   * @param key - Decryption key
+   * @returns Promise resolving to decrypted data
+   */
+  public async loadWithSimpleBinaryFormat(
+    filepath: string,
+    key: Buffer
+  ): Promise<any> {
+    try {
+      // Ensure filepath has .nxs extension
+      const fullFilepath = filepath.endsWith(NXS_EXTENSION)
+        ? filepath
+        : filepath + NXS_EXTENSION;
+
+      // Check if file exists
+      if (!fs.existsSync(fullFilepath)) {
+        logger.debug(`Checking file existence: ${fullFilepath}`);
+        // Try with and without .nxs extension
+        const alternativePath = fullFilepath.endsWith(NXS_EXTENSION)
+          ? fullFilepath.slice(0, -NXS_EXTENSION.length)
+          : fullFilepath + NXS_EXTENSION;
+
+        if (fs.existsSync(alternativePath)) {
+          logger.debug(`Found alternative path: ${alternativePath}`);
+          return await SimpleBinaryFormat.decrypt(alternativePath, key);
+        } else {
+          throw new Error(`File not found: ${fullFilepath}`);
+        }
+      }
+
+      // Use SimpleBinaryFormat for decryption
+      return await SimpleBinaryFormat.decrypt(fullFilepath, key);
+    } catch (error) {
+      logger.error("Simple binary format decryption failed", error);
 
       // Try fallback mode if enabled
       if (this.fallbackMode) {

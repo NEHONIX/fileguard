@@ -872,6 +872,95 @@ const decryptedData = await fgm.loadWithUltraSecureDecryption(
 );
 ```
 
+## 🔐 Binary Security Formats
+
+We've implemented multiple binary security formats that make data completely unreadable by humans or other systems. These formats encrypt the entire file, including headers and metadata, in binary format.
+
+### Available Binary Formats
+
+1. **Simple Binary Format**: Basic binary format with AES-256-GCM encryption
+2. **Integrated Binary Format**: Binary format integrated into the FileGuardManager class
+3. **Advanced Binary Format**: Multi-layer encryption with RSA for maximum security
+
+### Using the Simple Binary Format
+
+```typescript
+import { SimpleBinaryFormat } from "nehonix-fileguard";
+import * as crypto from "crypto";
+
+// Generate a secure encryption key
+const key = crypto.randomBytes(32);
+
+// Encrypt data
+await SimpleBinaryFormat.encrypt(data, key, "path/to/file.nxs");
+
+// Decrypt data
+const decryptedData = await SimpleBinaryFormat.decrypt("path/to/file.nxs", key);
+```
+
+### Using the Integrated Binary Format
+
+```typescript
+import { FileGuardManager } from "nehonix-fileguard";
+import * as crypto from "crypto";
+
+// Generate a secure encryption key
+const key = crypto.randomBytes(32);
+
+// Create a FileGuardManager
+const fgm = new FileGuardManager(key.toString("hex"));
+
+// Encrypt data
+await fgm.saveWithSimpleBinaryFormat("path/to/file.nxs", data, key);
+
+// Decrypt data
+const decryptedData = await fgm.loadWithSimpleBinaryFormat(
+  "path/to/file.nxs",
+  key
+);
+```
+
+### Using the Advanced Binary Format
+
+```typescript
+import { FileGuardManager, createPersistentRSAFGM } from "nehonix-fileguard";
+import * as crypto from "crypto";
+
+// Generate a secure encryption key
+const key = crypto.randomBytes(32);
+
+// Create a FileGuardManager with RSA keys
+const fgm = createPersistentRSAFGM(key.toString("hex"), {
+  rsaKeysPath: "./secure-keys.json",
+});
+
+// Encrypt data
+await fgm.saveWithBinarySecureFormat(
+  "path/to/file.nxs",
+  data,
+  key,
+  fgm.rsaKeyPair,
+  {
+    layers: 5,
+    addRandomPadding: true,
+  }
+);
+
+// Decrypt data
+const decryptedData = await fgm.loadWithBinarySecureFormat(
+  "path/to/file.nxs",
+  key,
+  fgm.rsaKeyPair
+);
+```
+
+For more detailed information about the binary formats, see:
+
+- [Binary Formats Overview](./BINARY_FORMATS.md)
+- [Simple Binary Format](./SIMPLE_BINARY_FORMAT.md)
+- [Integrated Binary Format](./INTEGRATED_BINARY_FORMAT.md)
+- [Advanced Binary Format](./BINARY_SECURITY.md)
+
 ### Fortify Integration
 
 The FileGuard library integrates with the Fortify security utilities to provide enhanced security features:

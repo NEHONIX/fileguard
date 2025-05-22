@@ -8,6 +8,7 @@ export { ProgressTracker, OperationType } from "./utils/progress";
 // Export main components
 export { FileGuardManager } from "./core/FileGuardManager";
 export { BinarySecureFormat } from "./core/BinarySecureFormat";
+export { SimpleBinaryFormat } from "./core/SimpleBinaryFormat";
 export { createPersistentRSAFGM } from "./utils/rsaSolution";
 export { encryptOrDecryptNXS } from "./utils/encryptionUtils";
 export { logger } from "./utils/logger";
