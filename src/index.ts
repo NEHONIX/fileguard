@@ -8,11 +8,23 @@ export { ProgressTracker, OperationType } from "./utils/progress";
 // Export main components
 export { FileGuardManager } from "./core/FileGuardManager";
 export { BinarySecureFormat } from "./core/BinarySecureFormat";
-export { SimpleBinaryFormat } from "./core/SimpleBinaryFormat";
+export { SimpleBinaryFormat } from "./utils/simpleBinaryFormat";
 export { createPersistentRSAFGM } from "./utils/rsaSolution";
 export { encryptOrDecryptNXS } from "./utils/encryptionUtils";
 export { logger } from "./utils/logger";
 export { UltraSecureEncryption } from "./utils/ultraSecureEncryption";
+
+// Export simplified encryption utilities
+export {
+  encryptData,
+  decryptData,
+  generateEncryptionKey,
+  generateRSAKeyPair,
+  ensureDirectoryExists,
+  // Also export the types
+  EncryptionOptions,
+  SimplifiedEncryptionResult,
+} from "./utils/cryptUtils";
 
 // Export Fortify core utilities
 export { SecureRandom } from "./utils/fortify/core/random";

@@ -1,0 +1,55 @@
+import { decryptData, encryptData } from "../src/utils/cryptUtils";
+
+const key = "186c7bb56d71699f563d7d828dda2f926ce05b6478ac1db8d266db4cf4693319";
+const rsa = {
+  publicKey: `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyKGuRP7vgSAuCzI7+sDM
+UWoQMC29MSFXEHtnyYqtuDhlHO0zL70Qd9x2fiOf1jBm34KvDZJ2zDlSMZFrhHo+
+NPWwbqqq6HP4h711l6phTIZnCAe1Y/djPKvOTSdcaZw4lpCCRMnHY9WB2f7R3DhS
+rcTUF1RuVuwDKRd9TKPKo9V7x2DkK7rNA5sqgI3f6o040RDIJKVlEWSvLFauh00K
+0Y+RDo36djXVlEkxCJ6TLpC1ODbrVM72dEpcJH9UUW4ablKVoTbyg/l0rQ/eMK4E
+/WmumlTvnQ/Qat2CEYHeer5tEKqurkI/TfpxokEg7PqGvkLbph4NqDTMdXLFpD1F
+5wIDAQAB
+-----END PUBLIC KEY-----`,
+  privateKey: `-----BEGIN PRIVATE KEY-----
+MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDIoa5E/u+BIC4L
+Mjv6wMxRahAwLb0xIVcQe2fJiq24OGUc7TMvvRB33HZ+I5/WMGbfgq8NknbMOVIx
+kWuEej409bBuqqroc/iHvXWXqmFMhmcIB7Vj92M8q85NJ1xpnDiWkIJEycdj1YHZ
+/tHcOFKtxNQXVG5W7AMpF31Mo8qj1XvHYOQrus0DmyqAjd/qjTjREMgkpWURZK8s
+Vq6HTQrRj5EOjfp2NdWUSTEInpMukLU4NutUzvZ0Slwkf1RRbhpuUpWhNvKD+XSt
+D94wrgT9aa6aVO+dD9Bq3YIRgd56vm0Qqq6uQj9N+nGiQSDs+oa+QtumHg2oNMx1
+csWkPUXnAgMBAAECggEAI/5pouQvuLU6vXR6MT7UiQijtdkG16EZGxJgqNYx21p2
+vW1KoRZktXQ+Z9vhSY5ubkvmNuOfX30rI0xpAx/hOCQZzojc144yuLuDNL3y7cUx
+B85GOxR/X7uc69eTazkFJ/HuBQREOsNro93k7YLHRniI6lSR5RM7b+xQZOb/rEuH
+pmbx1NyomWIKdGuPG/hiHp4ygfJRfZZsI6iV31k4VNq/veCIUyabuCcqzooMzCVs
+RQL1+rlc6sFopEzqlhpDnUX85QpVd39F2cA9CfG72kRQ80rl028w8Hc7Gw1mwWwZ
+BdjERGiTNf/YT2PqaiXEVtZIFSkKdtVp9mjUfuJDhQKBgQDq07vIXfCSC3vb4eUN
+SqLBF2nHHJpSiQZ5q4rudRwu5bUAE2h1e9yrVcQAynOmEEivMclRHNN9//R1tDsE
+LtKGsohbD7Vr2RWt5jXWH28n8XhsX2Cs94GZF78ei5P7MZOaiejtGFRI5nmdwZSJ
+eWndFHgOvqpiDV7qfbA8FzOXgwKBgQDauKXl86SjuEeihi+ZXDNzL3jMW8xVehNh
+RtHKrRWYTXY+W//QhDq6jV0uSiVpBqybd8Oj09xt986G08fWW0PkIXrnpN5NVMVf
+khUCWQ8Y4TguPXCKOu5essax8c4aWrsM1is2fmgpqwKfZhXb6pL+JwTWx5KvCW+Q
+Nni9GDqmzQKBgQCytjjvIC75tquoh54eI3MBqKPj2KzJq2a2Kgsttwqf1kmNqTeS
+UZV6/2aPg4PIGhR24Fjp1hpOhgCxo1xWrpuhzzVet/HGBgwtsEnAj2O07lxLfbrB
+aAvFSwE0ad1RCkXfEp2l8yIR6PUdTjmQ9knO6skDz68zuCFILCd3U+D7qQKBgGrZ
+abI8pGGW1OgAxaAV+sx6lHjBH8FiMbWD81kf1TziGrG8H+ytrEMWbD8A2eXE7O3G
+RDz0cusF9E7Jhwag7zmzYWdok3ETyJg3tSvAdi+hVuDAAwqEX47Dp22mwxj82gQb
+XGDyv9AbStyz8lnM7qJaTXLfbDk2UtoQwkseWwjBAoGAOaFmLAgsRK75DDHJYYFu
+567cMbvN/QM5Xc6C9fQWp45heP4coBKmSV6ODsTrs3GyDSkxJv7vYKSoOhC1UO5s
+L+edUk665wmBooqwLHixX7K44OBYynS+u4rkdUxm0OBS8nmvz3sE7qJI5nFwLNNJ
+yV7pikCNaDLJ7BYlE/fi+V4=
+-----END PRIVATE KEY-----`,
+};
+
+function runTest() {
+(async () => {
+    const res = await decryptData(
+      "global.nxs",
+      key,
+      rsa,
+     
+    );
+    console.log(res);
+  })();
+}
+runTest()

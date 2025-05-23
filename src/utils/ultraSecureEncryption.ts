@@ -343,10 +343,13 @@ export class UltraSecureEncryption {
 
       // Step 7: Encrypt metadata with RSA
       const metadataString = JSON.stringify(encryptionMetadata);
+
+      // Use OAEP padding (PKCS1 is no longer supported for decryption)
       const encryptedMetadata = crypto.publicEncrypt(
         {
           key: rsaKeyPair.publicKey,
           padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+          oaepHash: "sha256",
         },
         Buffer.from(metadataString)
       );
@@ -406,6 +409,46 @@ export class UltraSecureEncryption {
         25,
         "Validating encryption metadata..."
       );
+
+      // If metadata is encrypted (Buffer), decrypt it first
+      let parsedMetadata = metadata;
+      if (Buffer.isBuffer(metadata)) {
+        try {
+          // Use OAEP padding (PKCS1 is no longer supported for decryption)
+          const decryptedMetadata = crypto.privateDecrypt(
+            {
+              key: rsaKeyPair.privateKey,
+              padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+              oaepHash: "sha256",
+            },
+            metadata
+          );
+          parsedMetadata = JSON.parse(decryptedMetadata.toString());
+        } catch (error) {
+          // Try with different hash as fallback
+          logger.warn(
+            "RSA OAEP decryption failed with sha256, trying sha1 as fallback"
+          );
+          try {
+            const decryptedMetadata = crypto.privateDecrypt(
+              {
+                key: rsaKeyPair.privateKey,
+                padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+                oaepHash: "sha1",
+              },
+              metadata
+            );
+            parsedMetadata = JSON.parse(decryptedMetadata.toString());
+          } catch (innerError: any) {
+            throw new Error(
+              `Failed to decrypt metadata: ${
+                innerError?.message || String(innerError)
+              }`
+            );
+          }
+        }
+      }
+
       const {
         ivs,
         authTags,
@@ -415,7 +458,7 @@ export class UltraSecureEncryption {
         securityLevel,
         layers,
         honeypots,
-      } = metadata;
+      } = parsedMetadata;
 
       // Validate metadata
       if (

@@ -48,6 +48,10 @@ export interface AdvancedEncryptionConfig {
   blockSize?: number;
   addHoneypots?: boolean;
   customMetadata?: Record<string, any>;
+  /**
+   * Metadata to include with the encrypted file
+   */
+  metadata?: Record<string, any>;
 }
 
 /**

@@ -95,8 +95,8 @@ export class FileGuardManager {
   ): Promise<EncryptionResult> {
     // Generate a unique operation ID for tracking
     const operationId = NehoID.generate({
-      prefix: "op.nehonix",
-      separator: "nxs",
+      prefix: "swuse.op.nehonix",
+      separator: "_nxs@",
     });
 
     // Start tracking the encryption operation
@@ -237,7 +237,10 @@ export class FileGuardManager {
     metadata?: Record<string, any>
   ): Promise<EncryptionResult> {
     // Generate a unique operation ID for tracking
-    const operationId = crypto.randomBytes(8).toString("hex");
+    const operationId = NehoID.generate({
+      prefix: "swadve.op.nehonix",
+      separator: "_nxs@",
+    });
 
     // Start tracking the encryption operation
     ProgressTracker.startOperation(
@@ -369,7 +372,7 @@ export class FileGuardManager {
     options?: DecryptionOptions
   ): Promise<any> {
     // Generate a unique operation ID for tracking
-    const operationId = crypto.randomBytes(8).toString("hex");
+    const operationId = NehoID.generate({prefix: "lwad.dec.op.nehonix", separator: "_nxs@"});
 
     // Start tracking the decryption operation
     ProgressTracker.startOperation(OperationType.Decryption, operationId, 4);
@@ -1138,7 +1141,10 @@ export class FileGuardManager {
     options?: DecryptionOptions
   ): Promise<any> {
     // Generate a unique operation ID for tracking
-    const operationId = crypto.randomBytes(8).toString("hex");
+    const operationId = NehoID.generate({
+      prefix: "lwulsd.dec.op.nehonix",
+      separator: "_nxs@",
+    });
 
     // Start tracking the decryption operation
     ProgressTracker.startOperation(OperationType.Decryption, operationId, 5);

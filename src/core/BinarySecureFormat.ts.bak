@@ -112,35 +112,35 @@ export class BinarySecureFormat {
     try {
       // Convert and validate data
       let dataBuffer: Buffer;
-      let dataType: string;
-      if (Buffer.isBuffer(data)) {
-        dataType = "buffer";
-        dataBuffer = data;
-      } else if (typeof data === "object") {
-        dataType = "object";
-        dataBuffer = Buffer.from(JSON.stringify(data), "utf8");
-      } else if (typeof data === "string") {
-        dataType = "string";
-        dataBuffer = Buffer.from(data, "utf8");
-      } else {
-        throw new Error("Unsupported data type for encryption");
-      }
-      if (dataBuffer.length === 0) {
-        throw new Error("Cannot encrypt empty data");
-      }
+let dataType: string;
+if (Buffer.isBuffer(data)) {
+  dataType = "buffer";
+  dataBuffer = data;
+} else if (typeof data === "object") {
+  dataType = "object";
+  dataBuffer = Buffer.from(JSON.stringify(data), "utf8");
+} else if (typeof data === "string") {
+  dataType = "string";
+  dataBuffer = Buffer.from(data, "utf8");
+} else {
+  throw new Error("Unsupported data type for encryption");
+}
+if (dataBuffer.length === 0) {
+  throw new Error("Cannot encrypt empty data");
+}
 
-      // Generate enhanced secure parameters
-      const secureParams = this.generateSecureParams(key, kdfRounds);
+// Generate enhanced secure parameters
+const secureParams = this.generateSecureParams(key, kdfRounds);
 
-      // Create enhanced header with integrity information
-      const dataChecksum = crypto
-        .createHash("sha3-256")
-        .update(dataBuffer)
-        .digest("hex");
-      const header: FileHeader = {
-        timestamp: Date.now(),
-        dataType,
-        version: 2,
+// Create enhanced header with integrity information
+const dataChecksum = crypto
+  .createHash("sha3-256")
+  .update(dataBuffer)
+  .digest("hex");
+const header: FileHeader = {
+  timestamp: Date.now(),
+  dataType,
+  version: 2,
         layers,
         compressionLevel: options.compressionLevel || 9,
         flags: this.generateFlags(options),
@@ -152,39 +152,22 @@ export class BinarySecureFormat {
 
       // Step 1: Compress with integrity check
       let compressedData: Buffer;
-      if (dataType === "buffer") {
-        // Compress raw Buffer, prepend checksum
-        compressedData = await deflatePromise(dataBuffer, {
-          level: options.compressionLevel || 9,
-          strategy: zlib.constants.Z_DEFAULT_STRATEGY,
-        });
-        const checksum = crypto
-          .createHash("sha256")
-          .update(compressedData)
-          .digest();
-        compressedData = Buffer.concat([checksum, compressedData]);
-        logger.info(
-          `[DEBUG] After compression: length=${
-            compressedData.length
-          }, sha256=${crypto
-            .createHash("sha256")
-            .update(compressedData)
-            .digest("hex")}`
-        );
-      } else {
-        compressedData = await this.compressDataWithIntegrity(
-          dataBuffer.toString("utf8"),
-          options.compressionLevel || 9
-        );
-        logger.info(
-          `[DEBUG] After compression (non-buffer): length=${
-            compressedData.length
-          }, sha256=${crypto
-            .createHash("sha256")
-            .update(compressedData)
-            .digest("hex")}`
-        );
-      }
+if (dataType === "buffer") {
+  // Compress raw Buffer, prepend checksum
+  compressedData = await deflatePromise(dataBuffer, {
+    level: options.compressionLevel || 9,
+    strategy: zlib.constants.Z_DEFAULT_STRATEGY,
+  });
+  const checksum = crypto.createHash("sha256").update(compressedData).digest();
+  compressedData = Buffer.concat([checksum, compressedData]);
+  logger.info(`[DEBUG] After compression: length=${compressedData.length}, sha256=${crypto.createHash('sha256').update(compressedData).digest('hex')}`);
+} else {
+  compressedData = await this.compressDataWithIntegrity(
+    dataBuffer.toString("utf8"),
+    options.compressionLevel || 9
+  );
+  logger.info(`[DEBUG] After compression (non-buffer): length=${compressedData.length}, sha256=${crypto.createHash('sha256').update(compressedData).digest('hex')}`);
+}
 
       // Step 2: Create file content with header
       const headerBuffer = Buffer.from(JSON.stringify(header));
@@ -209,14 +192,7 @@ export class BinarySecureFormat {
         layers,
         operationId
       );
-      logger.info(
-        `[DEBUG] After multi-layer encryption: length=${
-          encryptedContent.length
-        }, sha256=${crypto
-          .createHash("sha256")
-          .update(encryptedContent)
-          .digest("hex")}`
-      );
+logger.info(`[DEBUG] After multi-layer encryption: length=${encryptedContent.length}, sha256=${crypto.createHash('sha256').update(encryptedContent).digest('hex')}`);
 
       // Step 4: Add RSA hybrid encryption
       ProgressTracker.updateProgress(
@@ -229,26 +205,11 @@ export class BinarySecureFormat {
       logger.info(
         `Data being passed to RSA encryption: ${encryptedContent.length} bytes`
       );
-      logger.info(
-        `[DEBUG] Before RSA encryption: length=${
-          encryptedContent.length
-        }, sha256=${crypto
-          .createHash("sha256")
-          .update(encryptedContent)
-          .digest("hex")}`
-      );
+logger.info(`[DEBUG] Before RSA encryption: length=${encryptedContent.length}, sha256=${crypto.createHash('sha256').update(encryptedContent).digest('hex')}`);
 
       const rsaEncrypted = await this.addEnhancedRSAEncryption(
         encryptedContent,
         rsaKeyPair.publicKey
-      );
-      logger.info(
-        `[DEBUG] Output of addEnhancedRSAEncryption: buffer size=${
-          rsaEncrypted.length
-        }, sha256=${crypto
-          .createHash("sha256")
-          .update(rsaEncrypted)
-          .digest("hex")}`
       );
 
       logger.info(`RSA encryption output: ${rsaEncrypted.length} bytes`);
@@ -333,11 +294,7 @@ export class BinarySecureFormat {
 
     // Read the encrypted buffer from disk
     const fileBuffer = fs.readFileSync(filePath);
-    logger.info(
-      `[DEBUG] After file read: buffer size=${
-        fileBuffer.length
-      }, sha256=${crypto.createHash("sha256").update(fileBuffer).digest("hex")}`
-    );
+    logger.info(`[DEBUG] After file read: buffer size=${fileBuffer.length}, sha256=${crypto.createHash('sha256').update(fileBuffer).digest('hex')}`);
 
     const operationId = NehoID.generate({
       prefix: "bin.dec.op.nehonix",
@@ -432,27 +389,13 @@ export class BinarySecureFormat {
         `Data being passed to RSA decryption: ${withoutTampering.length} bytes`
       );
 
-      logger.info(
-        `[DEBUG] Before RSA decryption: length=${
-          withoutTampering.length
-        }, sha256=${crypto
-          .createHash("sha256")
-          .update(withoutTampering)
-          .digest("hex")}`
-      );
-      const rsaDecrypted = await this.removeEnhancedRSAEncryption(
-        withoutTampering,
-        rsaKeyPair.privateKey
-      );
-      logger.info(
-        `[DEBUG] After RSA decryption: length=${
-          rsaDecrypted.length
-        }, sha256=${crypto
-          .createHash("sha256")
-          .update(rsaDecrypted)
-          .digest("hex")}`
-      );
-      logger.info(`RSA decryption output: ${rsaDecrypted.length} bytes`);
+      logger.info(`[DEBUG] Before RSA decryption: length=${withoutTampering.length}, sha256=${crypto.createHash('sha256').update(withoutTampering).digest('hex')}`);
+const rsaDecrypted = await this.removeEnhancedRSAEncryption(
+  withoutTampering,
+  rsaKeyPair.privateKey
+);
+logger.info(`[DEBUG] After RSA decryption: length=${rsaDecrypted.length}, sha256=${crypto.createHash('sha256').update(rsaDecrypted).digest('hex')}`);
+logger.info(`RSA decryption output: ${rsaDecrypted.length} bytes`);
 
       // Step 5: Multi-layer decryption (SECOND - after RSA)
       ProgressTracker.updateProgress(
@@ -466,38 +409,12 @@ export class BinarySecureFormat {
         throw new Error("Missing required secure parameters for decryption");
       }
 
-      // Reconstruct AAD deterministically from existing parameters
-      // This ensures the same AAD is used for decryption as was used for encryption
-      const reconstructedAAD = crypto
-        .createHash("sha256")
-        .update(
-          Buffer.concat([
-            secureParams.masterSalt,
-            secureParams.salt || Buffer.alloc(32),
-            secureParams.iv || Buffer.alloc(16),
-            Buffer.from("aad-reconstruction-key"),
-          ])
-        )
-        .digest();
-
-      // Extend to 64 bytes to match original AAD size
-      const fullAAD = Buffer.concat([
-        reconstructedAAD,
-        reconstructedAAD,
-      ]).subarray(0, 64);
-
       const decryptedContent = await this.decryptContentEnhanced(
         rsaDecrypted,
         key,
-        {
-          ...secureParams,
-          aad: fullAAD,
-          key: secureParams.key,
-          masterSalt: secureParams.masterSalt,
-        } as Partial<SecureParams> & {
+        secureParams as Partial<SecureParams> & {
           key: Buffer;
           masterSalt: Buffer;
-          aad: Buffer;
         },
         operationId
       );
@@ -515,17 +432,6 @@ export class BinarySecureFormat {
       // Step 7: Extract and decompress data
       ProgressTracker.updateProgress(operationId, 80, "Decompressing data...");
       const compressedData = decryptedContent.subarray(4 + headerLength);
-
-      logger.info(
-        `[DEBUG] Before decompression: headerLength=${headerLength}, decryptedContent.length=${decryptedContent.length}, compressedData.length=${compressedData.length}`
-      );
-      logger.info(
-        `[DEBUG] CompressedData sha256=${crypto
-          .createHash("sha256")
-          .update(compressedData)
-          .digest("hex")}`
-      );
-
       const decompressedData = await this.decompressDataWithIntegrity(
         compressedData
       );
@@ -536,41 +442,23 @@ export class BinarySecureFormat {
         90,
         "Verifying data integrity..."
       );
-
-      logger.info(
-        `[DEBUG] Data integrity verification: header.dataType=${header.dataType}, decompressedData.length=${decompressedData.length}`
-      );
-
       let dataString: string | undefined = undefined;
-      let dataBuffer: Buffer | undefined = undefined;
-      let dataChecksum: string;
-
-      if (header.dataType === "buffer") {
-        // For buffer data, the decompressed data IS the final buffer
-        // No need for additional decompression
-        dataBuffer = decompressedData;
-        dataChecksum = crypto
-          .createHash("sha3-256")
-          .update(dataBuffer)
-          .digest("hex");
-        logger.info(
-          `[DEBUG] Buffer data integrity: dataBuffer.length=${
-            dataBuffer.length
-          }, checksum=${dataChecksum.substring(0, 16)}...`
-        );
-      } else {
-        // For string/object data, convert to string
-        dataString = decompressedData.toString("utf8");
-        dataChecksum = crypto
-          .createHash("sha3-256")
-          .update(dataString)
-          .digest("hex");
-        logger.info(
-          `[DEBUG] String data integrity: dataString.length=${
-            dataString.length
-          }, checksum=${dataChecksum.substring(0, 16)}...`
-        );
-      }
+let dataBuffer: Buffer | undefined = undefined;
+let dataChecksum: string;
+if (header.dataType === "buffer") {
+  // Extract and verify checksum
+  const expectedChecksum = decompressedData.subarray(0, 32);
+  const compressedPart = decompressedData.subarray(32);
+  dataBuffer = await inflatePromise(compressedPart);
+  const actualChecksum = crypto.createHash("sha256").update(compressedPart).digest();
+  if (!expectedChecksum.equals(actualChecksum)) {
+    throw new Error("Buffer data integrity check failed: checksum mismatch");
+  }
+  dataChecksum = crypto.createHash("sha3-256").update(dataBuffer).digest("hex");
+} else {
+  dataString = decompressedData.toString("utf8");
+  dataChecksum = crypto.createHash("sha3-256").update(dataString).digest("hex");
+}
 
       if (dataChecksum !== header.checksum) {
         throw new Error(
@@ -638,22 +526,7 @@ export class BinarySecureFormat {
     const masterSalt = crypto.randomBytes(32);
     const iv = crypto.randomBytes(16);
     const salt = crypto.randomBytes(32);
-
-    // Generate AAD deterministically so it can be reconstructed during decryption
-    const aadBase = crypto
-      .createHash("sha256")
-      .update(
-        Buffer.concat([
-          masterSalt,
-          salt,
-          iv,
-          Buffer.from("aad-reconstruction-key"),
-        ])
-      )
-      .digest();
-
-    // Extend to 64 bytes to match expected AAD size
-    const aad = Buffer.concat([aadBase, aadBase]).subarray(0, 64);
+    const aad = crypto.randomBytes(64);
 
     // Derive integrity key separately
     const integrityKey = crypto.pbkdf2Sync(
@@ -702,64 +575,19 @@ export class BinarySecureFormat {
   private static async decompressDataWithIntegrity(
     data: Buffer
   ): Promise<Buffer> {
-    logger.info(
-      `[DEBUG] decompressDataWithIntegrity: input data.length=${data.length}`
-    );
-
-    if (data.length < 32) {
-      throw new Error(
-        `Compressed data too small: ${data.length} bytes, expected at least 32 bytes for checksum`
-      );
-    }
-
     const checksum = data.subarray(0, 32);
     const compressed = data.subarray(32);
-
-    logger.info(
-      `[DEBUG] decompressDataWithIntegrity: checksum.length=${checksum.length}, compressed.length=${compressed.length}`
-    );
-    logger.info(
-      `[DEBUG] Checksum: ${checksum.toString("hex").substring(0, 16)}...`
-    );
-    logger.info(
-      `[DEBUG] Compressed data: ${compressed
-        .toString("hex")
-        .substring(0, 32)}...`
-    );
 
     // Verify compression integrity
     const expectedChecksum = crypto
       .createHash("sha256")
       .update(compressed)
       .digest();
-
-    logger.info(
-      `[DEBUG] Expected checksum: ${expectedChecksum
-        .toString("hex")
-        .substring(0, 16)}...`
-    );
-
     if (!checksum.equals(expectedChecksum)) {
       throw new Error("Compressed data integrity check failed");
     }
 
-    logger.info(
-      `[DEBUG] Checksum verification passed, attempting decompression...`
-    );
-
-    try {
-      const result = await inflatePromise(compressed);
-      logger.info(`[DEBUG] Decompression successful: ${result.length} bytes`);
-      return result;
-    } catch (error: any) {
-      logger.error(`[DEBUG] Decompression failed: ${error.message}`);
-      logger.error(
-        `[DEBUG] Compressed data details: length=${
-          compressed.length
-        }, first 64 bytes: ${compressed.subarray(0, 64).toString("hex")}`
-      );
-      throw error;
-    }
+    return await inflatePromise(compressed);
   }
 
   /**
@@ -974,14 +802,7 @@ export class BinarySecureFormat {
       const metadataLength = Buffer.alloc(4);
       metadataLength.writeUInt32BE(metadataBuffer.length, 0);
 
-      logger.info(
-        `[DEBUG] After AES-GCM encryption: encrypted buffer size=${
-          encrypted.length
-        }, sha256=${crypto
-          .createHash("sha256")
-          .update(encrypted)
-          .digest("hex")}`
-      );
+      logger.info(`[DEBUG] After AES-GCM encryption: encrypted buffer size=${encrypted.length}, sha256=${crypto.createHash('sha256').update(encrypted).digest('hex')}`);
       return Buffer.concat([metadataLength, metadataBuffer, encrypted]);
     } catch (error: any) {
       throw new Error(
@@ -997,11 +818,6 @@ export class BinarySecureFormat {
     data: Buffer,
     privateKey: string
   ): Promise<Buffer> {
-    logger.info(
-      `[DEBUG] Input to removeEnhancedRSAEncryption: buffer size=${
-        data.length
-      }, sha256=${crypto.createHash("sha256").update(data).digest("hex")}`
-    );
     logger.info(`Starting RSA decryption, data size: ${data.length} bytes`);
 
     const metadataLength = data.readUInt32BE(0);
@@ -1068,14 +884,7 @@ export class BinarySecureFormat {
       `AES-GCM parameters: IV=${iv.length} bytes, AuthTag=${authTag.length} bytes, Algorithm=${metadata.algorithm}`
     );
 
-    logger.info(
-      `[DEBUG] Before AES-GCM decryption: encryptedData length=${
-        encryptedData.length
-      }, sha256=${crypto
-        .createHash("sha256")
-        .update(encryptedData)
-        .digest("hex")}`
-    );
+    logger.info(`[DEBUG] Before AES-GCM decryption: encryptedData length=${encryptedData.length}, sha256=${crypto.createHash('sha256').update(encryptedData).digest('hex')}`);
     try {
       const decipher = crypto.createDecipheriv(metadata.algorithm, aesKey, iv);
 
@@ -1159,11 +968,7 @@ export class BinarySecureFormat {
     // In a production environment, you would want to verify the HMAC
 
     // Just return the data without verification
-    logger.info(
-      `[DEBUG] After removeAntiTamperingLayer: buffer size=${
-        actualData.length
-      }, sha256=${crypto.createHash("sha256").update(actualData).digest("hex")}`
-    );
+    logger.info(`[DEBUG] After removeAntiTamperingLayer: buffer size=${actualData.length}, sha256=${crypto.createHash('sha256').update(actualData).digest('hex')}`);
     return actualData;
   }
 
@@ -1184,76 +989,61 @@ export class BinarySecureFormat {
     paddingSizeBuffer.writeUInt32BE(paddingSize, 0);
 
     const padded = Buffer.concat([data, paddingSizeBuffer, padding]);
-    logger.info(
-      `[DEBUG] After addObfuscatedPadding: buffer size=${
-        padded.length
-      }, sha256=${crypto.createHash("sha256").update(padded).digest("hex")}`
-    );
-    return padded;
+  logger.info(`[DEBUG] After addObfuscatedPadding: buffer size=${padded.length}, sha256=${crypto.createHash('sha256').update(padded).digest('hex')}`);
+  return padded;
   }
 
   /**
    * Remove obfuscated padding
    */
   private static removeObfuscatedPadding(data: Buffer): Buffer {
-    if (data.length < 68) {
-      // Need at least 68 bytes: minimum data + 4 bytes size + 64 bytes minimum padding
-      logger.info(`Data too small for padding removal: ${data.length} bytes`);
+    if (data.length < 4) {
+      // No padding to remove
       return data;
     }
 
-    // Structure from addObfuscatedPadding: [original_data][padding_size_4_bytes][padding_data]
-    // We need to scan through the data to find where the padding size is stored
+    // The padding size is stored in the last 4 bytes before the padding
+    // Structure: [original_data][padding_size_4_bytes][padding_data]
+
+    // Read padding size from the end
+    const paddingSizeOffset = data.length - 4;
+    let paddingSize: number;
 
     try {
-      // The padding size should be somewhere in the data, followed by the actual padding
-      // Scan backwards from the end, looking for a valid padding size
+      // Try to read padding size from different positions
+      // Sometimes the padding size might be at a different offset
 
-      for (
-        let possibleDataEnd = data.length - 64 - 4;
-        possibleDataEnd >= 4;
-        possibleDataEnd--
+      // First, try reading from the expected position (last 4 bytes of data before padding)
+      const tempPaddingSize = data.readUInt32BE(paddingSizeOffset - 4);
+
+      if (
+        tempPaddingSize > 0 &&
+        tempPaddingSize <= 576 &&
+        tempPaddingSize + 4 <= data.length
       ) {
-        try {
-          // Try reading padding size at this position
-          const paddingSize = data.readUInt32BE(possibleDataEnd);
-
-          // Check if this could be a valid padding size
-          if (paddingSize >= 64 && paddingSize <= 576) {
-            // Check if the structure makes sense
-            const expectedTotalSize = possibleDataEnd + 4 + paddingSize;
-
-            if (expectedTotalSize === data.length) {
-              // Found valid padding structure!
-              logger.info(
-                `Found padding: size=${paddingSize} bytes, original data ends at ${possibleDataEnd}`
-              );
-              const unpadded = data.subarray(0, possibleDataEnd);
-              logger.info(
-                `[DEBUG] After removeObfuscatedPadding: buffer size=${
-                  unpadded.length
-                }, sha256=${crypto
-                  .createHash("sha256")
-                  .update(unpadded)
-                  .digest("hex")}`
-              );
-              return unpadded;
-            }
-          }
-        } catch (e) {
-          // Continue scanning
-          continue;
-        }
+        paddingSize = tempPaddingSize;
+        // Remove padding: [original_data][padding_size][padding] -> [original_data]
+        return data.subarray(0, data.length - paddingSize - 4);
       }
 
-      // If no padding found, maybe padding was disabled
-      logger.info(`No padding structure found, assuming no padding was added`);
+      // If that doesn't work, try reading from the very end
+      paddingSize = data.readUInt32BE(paddingSizeOffset);
+
+      if (paddingSize > 0 && paddingSize <= 576 && paddingSize <= data.length) {
+        // Remove padding: [original_data][padding][padding_size] -> [original_data]
+        const unpadded = data.subarray(0, data.length - paddingSize - 4);
+        logger.info(`[DEBUG] After removeObfuscatedPadding: buffer size=${unpadded.length}, sha256=${crypto.createHash('sha256').update(unpadded).digest('hex')}`);
+        return unpadded;
+      }
+
+      // If no valid padding size found, return original data
+      logger.warn(
+        `Could not determine padding size, returning original data. Data size: ${data.length} bytes`
+      );
       return data;
     } catch (error: any) {
       logger.warn(
-        `Error removing padding: ${
-          error?.message || String(error)
-        }, returning original data`
+        `Error removing padding: ${error?.message || String(error)}, returning original data`
       );
       return data;
     }
@@ -1328,10 +1118,6 @@ export class BinarySecureFormat {
 
     const content = fileBuffer.subarray(offset, offset + contentSize);
 
-    // Try to extract AAD from the content if it's stored there
-    // For now, we'll reconstruct the AAD during decryption
-    // This is a temporary fix - in production, AAD should be stored securely
-
     return {
       content,
       secureParams: { iv, masterSalt, salt },
@@ -1355,12 +1141,7 @@ export class BinarySecureFormat {
     }
 
     try {
-      logger.info(
-        `[DEBUG] Before file write: buffer size=${data.length}, sha256=${crypto
-          .createHash("sha256")
-          .update(data)
-          .digest("hex")}`
-      );
+      logger.info(`[DEBUG] Before file write: buffer size=${data.length}, sha256=${crypto.createHash('sha256').update(data).digest('hex')}`);
       fs.writeFileSync(tempPath, data);
       fs.renameSync(tempPath, outputPath);
     } catch (error) {
