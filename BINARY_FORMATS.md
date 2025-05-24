@@ -12,14 +12,14 @@ NEHONIX FileGuard offers three binary format options with different security lev
 
 ## Choosing the Right Binary Format
 
-| Feature | Simple Binary Format | Integrated Binary Format | Advanced Binary Format |
-|---------|----------------------|--------------------------|------------------------|
-| Encryption | AES-256-GCM | AES-256-GCM | Multiple layers + RSA |
-| Key Management | Manual | Via FileGuardManager | Via FileGuardManager |
-| Complexity | Low | Medium | High |
-| Security Level | High | High | Maximum |
-| Performance | Fast | Fast | Slower |
-| File Size | Small | Small | Larger |
+| Feature        | Simple Binary Format | Integrated Binary Format | Advanced Binary Format |
+| -------------- | -------------------- | ------------------------ | ---------------------- |
+| Encryption     | AES-256-GCM          | AES-256-GCM              | Multiple layers + RSA  |
+| Key Management | Manual               | Via FileGuardManager     | Via FileGuardManager   |
+| Complexity     | Low                  | Medium                   | High                   |
+| Security Level | High                 | High                     | Maximum                |
+| Performance    | Fast                 | Fast                     | Slower                 |
+| File Size      | Small                | Small                    | Larger                 |
 
 ## Simple Binary Format
 
@@ -30,7 +30,7 @@ import { SimpleBinaryFormat } from "nehonix-fileguard";
 import * as crypto from "crypto";
 
 // Generate a secure encryption key
-const key = crypto.randomBytes(32);
+const key = Random.getRandomBytes(32);
 
 // Encrypt data
 await SimpleBinaryFormat.encrypt(data, key, "path/to/file.nxs");
@@ -50,7 +50,7 @@ import { FileGuardManager } from "nehonix-fileguard";
 import * as crypto from "crypto";
 
 // Generate a secure encryption key
-const key = crypto.randomBytes(32);
+const key = Random.getRandomBytes(32);
 
 // Create a FileGuardManager
 const fgm = new FileGuardManager(key.toString("hex"));
@@ -59,7 +59,10 @@ const fgm = new FileGuardManager(key.toString("hex"));
 await fgm.saveWithSimpleBinaryFormat("path/to/file.nxs", data, key);
 
 // Decrypt data
-const decryptedData = await fgm.loadWithSimpleBinaryFormat("path/to/file.nxs", key);
+const decryptedData = await fgm.loadWithSimpleBinaryFormat(
+  "path/to/file.nxs",
+  key
+);
 ```
 
 [Learn more about Integrated Binary Format](./INTEGRATED_BINARY_FORMAT.md)
@@ -73,7 +76,7 @@ import { FileGuardManager, createPersistentRSAFGM } from "nehonix-fileguard";
 import * as crypto from "crypto";
 
 // Generate a secure encryption key
-const key = crypto.randomBytes(32);
+const key = Random.getRandomBytes(32);
 
 // Create a FileGuardManager with RSA keys
 const fgm = createPersistentRSAFGM(key.toString("hex"), {
@@ -88,7 +91,7 @@ await fgm.saveWithBinarySecureFormat(
   fgm.rsaKeyPair,
   {
     layers: 5,
-    addRandomPadding: true
+    addRandomPadding: true,
   }
 );
 
@@ -139,16 +142,16 @@ npm run demo:binary-format
 
 ## Technical Comparison
 
-| Feature | Simple Binary Format | Integrated Binary Format | Advanced Binary Format |
-|---------|----------------------|--------------------------|------------------------|
-| Encryption Algorithm | AES-256-GCM | AES-256-GCM | Multiple (AES, Camellia, etc.) |
-| Key Derivation | PBKDF2 (10,000 iterations) | PBKDF2 (10,000 iterations) | PBKDF2 (100,000 iterations) |
-| Asymmetric Encryption | No | No | Yes (RSA) |
-| Encryption Layers | 1 | 1 | 3-7 |
-| Authentication | GCM Auth Tag | GCM Auth Tag | Multiple Auth Tags + HMAC |
-| Anti-Tampering | Basic | Basic | Advanced |
-| Random Padding | No | No | Optional |
-| Compression | No | No | Yes |
+| Feature               | Simple Binary Format       | Integrated Binary Format   | Advanced Binary Format         |
+| --------------------- | -------------------------- | -------------------------- | ------------------------------ |
+| Encryption Algorithm  | AES-256-GCM                | AES-256-GCM                | Multiple (AES, Camellia, etc.) |
+| Key Derivation        | PBKDF2 (10,000 iterations) | PBKDF2 (10,000 iterations) | PBKDF2 (100,000 iterations)    |
+| Asymmetric Encryption | No                         | No                         | Yes (RSA)                      |
+| Encryption Layers     | 1                          | 1                          | 3-7                            |
+| Authentication        | GCM Auth Tag               | GCM Auth Tag               | Multiple Auth Tags + HMAC      |
+| Anti-Tampering        | Basic                      | Basic                      | Advanced                       |
+| Random Padding        | No                         | No                         | Optional                       |
+| Compression           | No                         | No                         | Yes                            |
 
 ## Conclusion
 

@@ -37,7 +37,7 @@ import { createPersistentRSAFGM } from "nehonix-fileguard";
 import * as crypto from "crypto";
 
 // Generate a secure encryption key
-const key = crypto.randomBytes(32);
+const key = Random.getRandomBytes(32);
 
 // Create a FileGuardManager with persistent RSA keys
 const fgm = createPersistentRSAFGM(key.toString("hex"), {
@@ -52,7 +52,7 @@ const sensitiveData = {
     author: "Security Team",
     classification: "CONFIDENTIAL",
     created: new Date().toISOString(),
-  }
+  },
 };
 
 // Encrypt the data

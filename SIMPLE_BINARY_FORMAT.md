@@ -21,25 +21,22 @@ import { SimpleBinaryFormat } from "nehonix-fileguard";
 import * as crypto from "crypto";
 
 // Generate a secure encryption key
-const key = crypto.randomBytes(32);
+const key = Random.getRandomBytes(32);
 
 // Data to encrypt
 const sensitiveData = {
   title: "TOP SECRET",
-  content: "This is extremely sensitive content that requires the highest possible security protection.",
+  content:
+    "This is extremely sensitive content that requires the highest possible security protection.",
   credentials: {
     username: "admin",
     apiKey: "your-very-sensitive-api-key",
-    accessToken: "your-very-sensitive-token"
-  }
+    accessToken: "your-very-sensitive-token",
+  },
 };
 
 // Encrypt with simple binary format
-await SimpleBinaryFormat.encrypt(
-  sensitiveData,
-  key,
-  "path/to/secure-file.nxs"
-);
+await SimpleBinaryFormat.encrypt(sensitiveData, key, "path/to/secure-file.nxs");
 
 // Later, decrypt the data
 const decryptedData = await SimpleBinaryFormat.decrypt(
@@ -57,6 +54,7 @@ The simple binary file format uses the following structure:
 ```
 
 Where:
+
 - **Magic Bytes**: Binary identifier "NXSBIN" (not human-readable)
 - **IV**: Initialization Vector for encryption
 - **Salt**: Salt for key derivation
@@ -64,6 +62,7 @@ Where:
 - **Encrypted Content**: The encrypted data with auth tag
 
 The encrypted content itself contains:
+
 - **Auth Tag (16 bytes)**: Authentication tag for GCM mode
 - **Encrypted Data**: The encrypted header and data
 

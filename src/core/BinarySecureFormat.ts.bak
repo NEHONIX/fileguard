@@ -523,9 +523,9 @@ if (header.dataType === "buffer") {
     key: Buffer,
     kdfRounds: number
   ): SecureParams {
-    const masterSalt = crypto.randomBytes(32);
+    const masterSalt = Random.getRandomBytes(32);
     const iv = crypto.randomBytes(16);
-    const salt = crypto.randomBytes(32);
+    const salt = Random.getRandomBytes(32);
     const aad = crypto.randomBytes(64);
 
     // Derive integrity key separately
@@ -740,7 +740,7 @@ if (header.dataType === "buffer") {
     publicKey: string
   ): Promise<Buffer> {
     // Generate strong AES key
-    const aesKey = crypto.randomBytes(32);
+    const aesKey = Random.getRandomBytes(32);
     const iv = crypto.randomBytes(16);
 
     // Validate RSA key can handle the AES key size
@@ -1165,7 +1165,7 @@ if (header.dataType === "buffer") {
       // Test if algorithm is available
       const testCipher = crypto.createCipheriv(
         preferredAlgorithm,
-        crypto.randomBytes(32),
+        Random.getRandomBytes(32),
         crypto.randomBytes(this.getIVLength(preferredAlgorithm))
       );
       testCipher.destroy();

@@ -18,7 +18,7 @@ import { NehoID } from "nehoid";
 import {
   validateDataSizeForRSAKey,
   getMaxDataSizeForRSAKey,
-} from "../utils/rsaKeyCalculator";
+} from "fortify2-js";
 
 // Enhanced magic bytes with version info
 const MAGIC_BYTES = Buffer.from([

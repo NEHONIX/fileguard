@@ -2,13 +2,13 @@
  * Test utilities for NEHONIX FileGuard tests
  */
 
-import * as crypto from 'crypto';
-import * as fs from 'fs';
-import * as path from 'path';
-import { RSAKeyPair } from '../../src/types';
+import * as crypto from "crypto";
+import * as fs from "fs";
+import * as path from "path";
+import { RSAKeyPair } from "../../src/types";
 
 // Test directory for temporary files
-export const TEST_DIR = path.join(__dirname, '..', 'output');
+export const TEST_DIR = path.join(__dirname, "..", "output");
 
 /**
  * Ensure test directory exists
@@ -40,7 +40,7 @@ export function cleanupTestFiles(): void {
  * @returns Buffer containing the encryption key
  */
 export function generateTestEncryptionKey(): Buffer {
-  return crypto.randomBytes(32);
+  return Random.getRandomBytes(32);
 }
 
 /**
@@ -48,12 +48,12 @@ export function generateTestEncryptionKey(): Buffer {
  * @returns RSA key pair with public and private keys
  */
 export function generateTestRSAKeyPair(): RSAKeyPair {
-  const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+  const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
     modulusLength: 2048,
-    publicKeyEncoding: { type: 'spki', format: 'pem' },
-    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+    publicKeyEncoding: { type: "spki", format: "pem" },
+    privateKeyEncoding: { type: "pkcs8", format: "pem" },
   });
-  
+
   return { publicKey, privateKey };
 }
 
@@ -63,26 +63,27 @@ export function generateTestRSAKeyPair(): RSAKeyPair {
  */
 export function generateTestData(): any {
   return {
-    title: 'Test Document',
+    title: "Test Document",
     timestamp: new Date().toISOString(),
-    content: 'This is a test document with some content for encryption testing.',
+    content:
+      "This is a test document with some content for encryption testing.",
     numbers: [1, 2, 3, 4, 5],
     nested: {
-      field1: 'value1',
+      field1: "value1",
       field2: 123,
       field3: true,
       deepNested: {
-        array: ['a', 'b', 'c'],
+        array: ["a", "b", "c"],
         date: new Date().toISOString(),
-      }
+      },
     },
     boolean: true,
     nullValue: null,
     metadata: {
-      author: 'Test Author',
-      tags: ['test', 'encryption', 'security'],
-      version: '1.0.0',
-    }
+      author: "Test Author",
+      tags: ["test", "encryption", "security"],
+      version: "1.0.0",
+    },
   };
 }
 
@@ -94,8 +95,9 @@ export function generateTestData(): any {
 export function generateLargeTestData(sizeInKB: number = 100): any {
   // Generate a large string (approximately 1KB per 1000 chars)
   const generateLargeString = (size: number) => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
+    const chars =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
     for (let i = 0; i < size; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
@@ -103,14 +105,14 @@ export function generateLargeTestData(sizeInKB: number = 100): any {
   };
 
   return {
-    title: 'Large Test Document',
+    title: "Large Test Document",
     timestamp: new Date().toISOString(),
     content: generateLargeString(sizeInKB * 1000), // Approx. sizeInKB in size
     metadata: {
-      author: 'Test Author',
-      tags: ['test', 'large', 'performance'],
-      version: '1.0.0',
-    }
+      author: "Test Author",
+      tags: ["test", "large", "performance"],
+      version: "1.0.0",
+    },
   };
 }
 
@@ -125,8 +127,10 @@ export function verifyDataIntegrity(original: any, decrypted: any): boolean {
   // Convert to JSON and back to handle Date objects and other special types
   const normalizedOriginal = JSON.parse(JSON.stringify(original));
   const normalizedDecrypted = JSON.parse(JSON.stringify(decrypted));
-  
-  return JSON.stringify(normalizedOriginal) === JSON.stringify(normalizedDecrypted);
+
+  return (
+    JSON.stringify(normalizedOriginal) === JSON.stringify(normalizedDecrypted)
+  );
 }
 
 /**
@@ -135,7 +139,10 @@ export function verifyDataIntegrity(original: any, decrypted: any): boolean {
  * @param extension - File extension (default: .nxs)
  * @returns Path to the test file
  */
-export function getTestFilePath(prefix: string = 'test', extension: string = '.nxs'): string {
+export function getTestFilePath(
+  prefix: string = "test",
+  extension: string = ".nxs"
+): string {
   const timestamp = Date.now();
   const random = Math.floor(Math.random() * 10000);
   return path.join(TEST_DIR, `${prefix}-${timestamp}-${random}${extension}`);
@@ -146,12 +153,14 @@ export function getTestFilePath(prefix: string = 'test', extension: string = '.n
  * @param fn - Function to measure
  * @returns Result of the function and execution time in milliseconds
  */
-export async function measureExecutionTime<T>(fn: () => Promise<T>): Promise<{ result: T, executionTimeMs: number }> {
+export async function measureExecutionTime<T>(
+  fn: () => Promise<T>
+): Promise<{ result: T; executionTimeMs: number }> {
   const startTime = Date.now();
   const result = await fn();
   const endTime = Date.now();
   return {
     result,
-    executionTimeMs: endTime - startTime
+    executionTimeMs: endTime - startTime,
   };
 }

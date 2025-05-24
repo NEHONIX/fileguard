@@ -9,10 +9,8 @@ import * as crypto from "crypto";
 import * as fs from "fs";
 import * as path from "path";
 import { SecurityLevel, CompressionLevel, RSAKeyPair } from "../types";
-import {
-  generateRSAKeyPairForData,
-  calculateRSAKeySize,
-} from "./rsaKeyCalculator";
+import { SecureBuffer, Random } from "fortify2-js";
+import { generateRSAKeyPairForData, calculateRSAKeySize } from "fortify2-js";
 
 /**
  * Options for encryption operations
@@ -129,10 +127,11 @@ export interface SimplifiedEncryptionResult {
 
 /**
  * Generate a secure random encryption key
+ * @param keySize - Key size in bytes (default: 32 bytes for AES-256)
  * @returns Buffer containing the encryption key
  */
-export function generateEncryptionKey(): Buffer {
-  return crypto.randomBytes(32);
+export function generateEncryptionKey(keySize: number = 32): Buffer {
+  return Random.getRandomBytes(keySize).getBuffer();
 }
 
 /**
@@ -196,6 +195,7 @@ export async function encryptData(
   filePath: string,
   options: EncryptionOptions = {
     useBinaryFormat: true,
+    layers: 3,
   }
 ): Promise<SimplifiedEncryptionResult> {
   // Generate encryption key if not provided
@@ -204,7 +204,7 @@ export async function encryptData(
 
   // Calculate data size for smart RSA key sizing
   const dataString = JSON.stringify(data);
-  const dataSize = Buffer.from(dataString).length;
+  const dataSize = SecureBuffer.from(dataString).length();
 
   // Generate RSA key pair with smart sizing or custom size
   let rsaKeyPair: RSAKeyPair;

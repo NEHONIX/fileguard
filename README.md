@@ -830,7 +830,7 @@ import { FileGuardManager, createPersistentRSAFGM } from "nehonix-fileguard";
 import * as crypto from "crypto";
 
 // Generate a secure encryption key
-const key = crypto.randomBytes(32);
+const key = Random.getRandomBytes(32);
 
 // Create a FileGuardManager with persistent RSA keys
 const fgm = createPersistentRSAFGM(key.toString("hex"), {
@@ -889,7 +889,7 @@ import { SimpleBinaryFormat } from "nehonix-fileguard";
 import * as crypto from "crypto";
 
 // Generate a secure encryption key
-const key = crypto.randomBytes(32);
+const key = Random.getRandomBytes(32);
 
 // Encrypt data
 await SimpleBinaryFormat.encrypt(data, key, "path/to/file.nxs");
@@ -905,7 +905,7 @@ import { FileGuardManager } from "nehonix-fileguard";
 import * as crypto from "crypto";
 
 // Generate a secure encryption key
-const key = crypto.randomBytes(32);
+const key = Random.getRandomBytes(32);
 
 // Create a FileGuardManager
 const fgm = new FileGuardManager(key.toString("hex"));
@@ -927,7 +927,7 @@ import { FileGuardManager, createPersistentRSAFGM } from "nehonix-fileguard";
 import * as crypto from "crypto";
 
 // Generate a secure encryption key
-const key = crypto.randomBytes(32);
+const key = Random.getRandomBytes(32);
 
 // Create a FileGuardManager with RSA keys
 const fgm = createPersistentRSAFGM(key.toString("hex"), {

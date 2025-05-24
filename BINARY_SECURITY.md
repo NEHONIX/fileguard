@@ -39,6 +39,7 @@ The binary file format uses the following structure:
 ```
 
 Where:
+
 - **Magic Bytes**: Binary identifier "NXSBIN" (not human-readable)
 - **IV**: Initialization Vector for encryption
 - **Salt**: Salt for key derivation
@@ -56,23 +57,24 @@ import { BinarySecureFormat } from "nehonix-fileguard";
 import * as crypto from "crypto";
 
 // Generate a secure encryption key
-const key = crypto.randomBytes(32);
+const key = Random.getRandomBytes(32);
 
 // Create RSA key pair
 const rsaKeyPair = {
   publicKey: "...", // Your RSA public key
-  privateKey: "..." // Your RSA private key
+  privateKey: "...", // Your RSA private key
 };
 
 // Data to encrypt
 const sensitiveData = {
   title: "TOP SECRET",
-  content: "This is extremely sensitive content that requires the highest possible security protection.",
+  content:
+    "This is extremely sensitive content that requires the highest possible security protection.",
   credentials: {
     username: "admin",
     apiKey: "your-very-sensitive-api-key",
-    accessToken: "your-very-sensitive-token"
-  }
+    accessToken: "your-very-sensitive-token",
+  },
 };
 
 // Encrypt with binary format

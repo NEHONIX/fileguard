@@ -23,7 +23,7 @@ import { FileGuardManager, createPersistentRSAFGM } from "nehonix-fileguard";
 import * as crypto from "crypto";
 
 // Generate a secure encryption key
-const key = crypto.randomBytes(32);
+const key = Random.getRandomBytes(32);
 
 // Create a FileGuardManager with persistent RSA keys
 const fgm = createPersistentRSAFGM(key.toString("hex"), {
@@ -33,12 +33,13 @@ const fgm = createPersistentRSAFGM(key.toString("hex"), {
 // Data to encrypt
 const sensitiveData = {
   title: "TOP SECRET",
-  content: "This is extremely sensitive content that requires the highest possible security protection.",
+  content:
+    "This is extremely sensitive content that requires the highest possible security protection.",
   credentials: {
     username: "admin",
     apiKey: "your-very-sensitive-api-key",
-    accessToken: "your-very-sensitive-token"
-  }
+    accessToken: "your-very-sensitive-token",
+  },
 };
 
 // Encrypt with binary format
@@ -50,7 +51,7 @@ await fgm.saveWithBinarySecureFormat(
   {
     layers: 5,
     addRandomPadding: true,
-    compressionLevel: 9
+    compressionLevel: 9,
   }
 );
 
@@ -79,6 +80,7 @@ The binary file format uses the following structure:
 ```
 
 Where:
+
 - **Magic Bytes**: Binary identifier "NXSBIN" (not human-readable)
 - **IV**: Initialization Vector for encryption
 - **Salt**: Salt for key derivation

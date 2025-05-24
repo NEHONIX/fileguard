@@ -29,6 +29,7 @@ import {
   decryptWithFortify,
 } from "../utils/fortifyIntegration";
 import { NehoID } from "nehoid";
+import { Random } from "fortify2-js";
 
 // Promisify fs functions
 const readFilePromise = util.promisify(fs.readFile);
@@ -372,7 +373,10 @@ export class FileGuardManager {
     options?: DecryptionOptions
   ): Promise<any> {
     // Generate a unique operation ID for tracking
-    const operationId = NehoID.generate({prefix: "lwad.dec.op.nehonix", separator: "_nxs@"});
+    const operationId = NehoID.generate({
+      prefix: "lwad.dec.op.nehonix",
+      separator: "_nxs@",
+    });
 
     // Start tracking the decryption operation
     ProgressTracker.startOperation(OperationType.Decryption, operationId, 4);
@@ -584,7 +588,7 @@ export class FileGuardManager {
       const layerKey = this.deriveLayerKey(key, i, algorithm);
 
       // Generate initialization vector
-      const iv = crypto.randomBytes(16);
+      const iv = Random.getRandomBytes(16);
 
       // Create cipher
       const cipher = crypto.createCipheriv(algorithm, layerKey, iv);
@@ -763,8 +767,8 @@ export class FileGuardManager {
     const parsed = JSON.parse(data);
 
     // Add honeypot fields that look like real data
-    parsed.honeypot1 = crypto.randomBytes(32).toString("base64");
-    parsed.decryptionKey = crypto.randomBytes(16).toString("base64");
+    parsed.honeypot1 = Random.getRandomBytes(32).toString("base64");
+    parsed.decryptionKey = Random.getRandomBytes(16).toString("base64");
     parsed._meta = {
       timestamp: Date.now(),
       version: "1.0.0",
@@ -804,10 +808,10 @@ export class FileGuardManager {
    */
   private addRSAEncryption(data: string, publicKey: string): string {
     // Generate a random AES key
-    const aesKey = crypto.randomBytes(32);
+    const aesKey = Random.getRandomBytes(32);
 
     // Encrypt the data with AES
-    const iv = crypto.randomBytes(16);
+    const iv = Random.getRandomBytes(16);
     const cipher = crypto.createCipheriv("aes-256-gcm", aesKey, iv);
 
     // Set AAD for GCM mode

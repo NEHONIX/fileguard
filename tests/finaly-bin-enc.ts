@@ -1,5 +1,14 @@
 import path from "path";
 import { decryptData, encryptData } from "../src/utils/cryptUtils";
+import {
+  FortifyJS,
+  KeyDerivationAlgorithm,
+  Keys,
+  Random,
+  SecureRandom,
+  Validators,
+} from "fortify2-js";
+import * as crypto from "crypto";
 
 const data = {
   users: [
@@ -38,38 +47,27 @@ const data = {
   ],
 };
 
-async function runTest() {
-  const OUTPUT_DIR = path.join(__dirname, "output", "finaly-bin-enc");
-  const binaryFilePath = path.join(OUTPUT_DIR, "finaly-bin-enc.nxs");
+// encrypt data
+// async function runTest() {
+//   const OUTPUT_DIR = path.join(__dirname, "output", "finaly-bin-enc");
+//   const binaryFilePath = path.join(OUTPUT_DIR, "finaly-bin-enc.nxs");
 
-  const binaryResult = await encryptData(data, binaryFilePath, {
-    useBinaryFormat: true,
-    securityLevel: "high",
-    compressionLevel: "maximum",
-    layers: 7,
-    useAlgorithmRotation: true,
-    addHoneypots: true,
-    useSmartRSAKeySize: true,
-  });
+//   const result = await encryptData(data, binaryFilePath, {
+//     useBinaryFormat: true,
+//     securityLevel: "high",
+//     compressionLevel: "medium",
+//     layers: 2,
+//     useAlgorithmRotation: false,
+//     addHoneypots: true,
+//   });
 
-  console.log("Binary format encryption successful!");
-  console.log("Encrypt result: ", binaryResult);
-  console.log(`File saved to: ${binaryResult.filePath}`);
-  console.log(`Original size: ${binaryResult.originalSize} bytes`);
-  console.log(`Encrypted size: ${binaryResult.encryptedSize} bytes`);
-  console.log(`Compression ratio: ${binaryResult.compressionRatio}`);
-  console.log(`RSA key size used: ${binaryResult.rsaKeySize} bits`);
+//   console.log("Binary format encryption successful!");
+//   console.log("Encrypt result: ", result);
+//   console.log(`File saved to: ${result.filePath}`);
+//   console.log(`Original size: ${result.originalSize} bytes`);
+// }
 
-  // decoding
-  const decryptedData = await decryptData(
-    binaryResult.filePath,
-    binaryResult.encryptionKeyHex,
-    binaryResult.rsaKeyPair!,
-    false,
-    true
-  );
-
-  console.log("Decrypted data: ", decryptedData);
-}
-
-runTest();
+console.log({
+  x: Random.getRandomBytes(16).toString("hex"),
+  y: crypto.randomBytes(16).toString("hex"),
+});

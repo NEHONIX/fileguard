@@ -100,7 +100,7 @@ import { FileGuardManager, createPersistentRSAFGM } from "nehonix-fileguard";
 import * as crypto from "crypto";
 
 // Generate a secure encryption key
-const key = crypto.randomBytes(32);
+const key = Random.getRandomBytes(32);
 
 // Create a FileGuardManager with persistent RSA keys
 const fgm = createPersistentRSAFGM(key.toString("hex"), {
@@ -113,8 +113,8 @@ const sensitiveData = {
   content: "This data requires the highest level of protection.",
   credentials: {
     apiKey: "your-very-sensitive-api-key",
-    accessToken: "your-very-sensitive-token"
-  }
+    accessToken: "your-very-sensitive-token",
+  },
 };
 
 // Configure with maximum security
@@ -123,7 +123,7 @@ const config = {
   compressionLevel: "maximum",
   layers: 5,
   useAlgorithmRotation: true,
-  addHoneypots: true
+  addHoneypots: true,
 };
 
 // Encrypt with ultra-secure protection

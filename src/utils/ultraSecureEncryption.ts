@@ -10,14 +10,9 @@ import * as crypto from "crypto";
 import * as zlib from "zlib";
 import { promisify } from "util";
 import { statsTracker } from "./fortify/core/utils/statsTracker";
-import { SecureRandom } from "./fortify/core/random";
+import { Random, SecureRandom } from "fortify2-js";
 import { Hash } from "./fortify/core/hash";
-import {
-  bufferToHex,
-  hexToBuffer,
-  bufferToBase64,
-  base64ToBuffer,
-} from "./fortify/core/utils/encoding";
+
 import { logger } from "./logger";
 import { ProgressTracker, OperationType } from "./progress";
 import { SecurityLevel, CompressionLevel } from "../types";
@@ -246,7 +241,7 @@ export class UltraSecureEncryption {
         "Generating encryption parameters..."
       );
       const masterKey = this.normalizeKey(key);
-      const salt = crypto.randomBytes(32);
+      const salt = Random.getRandomBytes(32).getBuffer();
       const ivs: Buffer[] = [];
       const authTags: Buffer[] = [];
       const algorithms: string[] = [];

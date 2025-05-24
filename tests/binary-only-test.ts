@@ -4,7 +4,7 @@
  */
 
 import { decryptData, encryptData } from "../src/utils/cryptUtils";
-import { generateRSAKeyPairForData, testRSAWithDataSize, calculateRSAKeySize } from "../src/utils/rsaKeyCalculator";
+import { generateRSAKeyPairForData, testRSAWithDataSize, calculateRSAKeySize } from "fortify2-js";
 import * as fs from "fs";
 import * as crypto from "crypto";
 import { fileURLToPath } from "url";

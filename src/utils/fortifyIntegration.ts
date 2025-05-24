@@ -3,30 +3,30 @@
  * Provides integration with the Fortify security library
  */
 
-import * as crypto from 'crypto';
-import * as zlib from 'zlib';
-import { 
-  SecurityLevel, 
-  CompressionLevel, 
+import * as crypto from "crypto";
+import * as zlib from "zlib";
+import {
+  SecurityLevel,
+  CompressionLevel,
   AdvancedEncryptionConfig,
   FortifyEncryptionOptions,
   FortifyEncryptionResult,
-  FortifySecurityParams
-} from '../types';
-import { logger } from './logger';
-import { ProgressTracker, OperationType } from './progress';
+  FortifySecurityParams,
+} from "../types";
+import { logger } from "./logger";
+import { ProgressTracker, OperationType } from "./progress";
 
 // Import Fortify utilities
-import { SecureRandom } from '../utils/fortify/core/random';
-import { argon2Derive, balloonDerive } from '../utils/fortify/memory-hard';
-import { 
-  lamportGenerateKeypair, 
-  lamportSign, 
+import { Random, SecureRandom } from "fortify2-js";
+import { argon2Derive, balloonDerive } from "fortify2-js";
+import {
+  lamportGenerateKeypair,
+  lamportSign,
   lamportVerify,
   generateKyberKeyPair,
   kyberEncapsulate,
-  kyberDecapsulate
-} from '../utils/fortify/post-quantum';
+  kyberDecapsulate,
+} from "fortify2-js";
 
 /**
  * Convert standard security level to Fortify security level
@@ -35,10 +35,14 @@ import {
  */
 export function toFortifySecurityLevel(level: SecurityLevel): number {
   switch (level) {
-    case 'standard': return 1;
-    case 'high': return 3;
-    case 'max': return 5;
-    default: return 3;
+    case "standard":
+      return 1;
+    case "high":
+      return 3;
+    case "max":
+      return 5;
+    default:
+      return 3;
   }
 }
 
@@ -54,40 +58,43 @@ export function generateSecureParams(
 ): FortifySecurityParams {
   // Generate a secure salt
   const salt = Buffer.from(SecureRandom.getRandomBytes(16));
-  
+
   // Generate a secure IV
   const iv = Buffer.from(SecureRandom.getRandomBytes(16));
-  
+
   // Generate additional authenticated data
   const aad = Buffer.from(SecureRandom.getRandomBytes(32));
-  
+
   // For maximum security, generate a post-quantum key pair
   let postQuantumKeyPair = undefined;
-  
-  if (securityLevel === 'max') {
+
+  if (securityLevel === "max") {
     try {
       // Generate a Kyber key pair for post-quantum security
       const kyberKeyPair = generateKyberKeyPair({
-        securityLevel: toFortifySecurityLevel(securityLevel)
+        securityLevel: toFortifySecurityLevel(securityLevel),
       });
-      
+
       postQuantumKeyPair = {
         publicKey: kyberKeyPair.publicKey,
-        privateKey: kyberKeyPair.privateKey
+        privateKey: kyberKeyPair.privateKey,
       };
-      
-      logger.debug('Generated post-quantum key pair for maximum security');
+
+      logger.debug("Generated post-quantum key pair for maximum security");
     } catch (error) {
-      logger.warn('Failed to generate post-quantum key pair, falling back to standard encryption', error);
+      logger.warn(
+        "Failed to generate post-quantum key pair, falling back to standard encryption",
+        error
+      );
     }
   }
-  
+
   return {
     key,
     salt,
     iv,
     aad,
-    postQuantumKeyPair
+    postQuantumKeyPair,
   };
 }
 
@@ -108,17 +115,17 @@ export async function deriveSecureKey(
   } = {}
 ): Promise<Buffer> {
   const startTime = Date.now();
-  
+
   // Convert password to string if it's a buffer
-  const passwordStr = Buffer.isBuffer(password) 
-    ? password.toString('hex') 
+  const passwordStr = Buffer.isBuffer(password)
+    ? password.toString("hex")
     : password;
-  
+
   // Set default options
   const memoryCost = options.memoryCost || 16384; // 16 MB
   const timeCost = options.timeCost || 4;
   const keyLength = options.keyLength || 32;
-  
+
   try {
     // Use Argon2 for memory-hard key derivation
     const result = await argon2Derive(passwordStr, {
@@ -126,27 +133,31 @@ export async function deriveSecureKey(
       timeCost,
       parallelism: 1,
       keyLength,
-      salt: new Uint8Array(salt)
+      salt: new Uint8Array(salt),
     });
-    
-    logger.debug(`Key derived using Argon2 (${result.metrics.timeTakenMs}ms, ${result.metrics.memoryUsedBytes} bytes)`);
-    
-    return Buffer.from(result.derivedKey, 'hex');
+
+    logger.debug(
+      `Key derived using Argon2 (${result.metrics.timeTakenMs}ms, ${result.metrics.memoryUsedBytes} bytes)`
+    );
+
+    return Buffer.from(result.derivedKey, "hex");
   } catch (error) {
-    logger.warn('Argon2 key derivation failed, falling back to Balloon', error);
-    
+    logger.warn("Argon2 key derivation failed, falling back to Balloon", error);
+
     // Fallback to Balloon
     const result = balloonDerive(passwordStr, {
       memoryCost,
       timeCost,
       parallelism: 1,
       keyLength,
-      salt: new Uint8Array(salt)
+      salt: new Uint8Array(salt),
     });
-    
-    logger.debug(`Key derived using Balloon (${result.metrics.timeTakenMs}ms, ${result.metrics.memoryUsedBytes} bytes)`);
-    
-    return Buffer.from(result.derivedKey, 'hex');
+
+    logger.debug(
+      `Key derived using Balloon (${result.metrics.timeTakenMs}ms, ${result.metrics.memoryUsedBytes} bytes)`
+    );
+
+    return Buffer.from(result.derivedKey, "hex");
   }
 }
 
@@ -163,111 +174,109 @@ export async function encryptWithFortify(
   options: FortifyEncryptionOptions
 ): Promise<FortifyEncryptionResult> {
   const startTime = Date.now();
-  const operationId = crypto.randomBytes(8).toString('hex');
-  
+  const operationId = crypto.randomBytes(8).toString("hex");
+
   // Start tracking the encryption operation
   ProgressTracker.startOperation(
-    OperationType.Encryption, 
-    operationId, 
+    OperationType.Encryption,
+    operationId,
     options.layers || 3
   );
-  
+
   try {
     // Convert data to buffer if it's a string
-    const dataBuffer = typeof data === 'string' 
-      ? Buffer.from(data) 
-      : data;
-    
+    const dataBuffer = typeof data === "string" ? Buffer.from(data) : data;
+
     // Step 1: Compress data if compression is enabled
-    ProgressTracker.updateProgress(operationId, 10, 'Compressing data...');
+    ProgressTracker.updateProgress(operationId, 10, "Compressing data...");
     let processedData = dataBuffer;
-    
-    if (options.compressionLevel !== 'none') {
+
+    if (options.compressionLevel !== "none") {
       processedData = await compressData(dataBuffer, options.compressionLevel);
-      ProgressTracker.updateProgress(operationId, 20, 'Data compressed');
+      ProgressTracker.updateProgress(operationId, 20, "Data compressed");
     }
-    
+
     // Step 2: Derive a secure key if memory-hard KDF is enabled
-    ProgressTracker.updateProgress(operationId, 30, 'Deriving secure key...');
+    ProgressTracker.updateProgress(operationId, 30, "Deriving secure key...");
     let encryptionKey = params.key;
-    
+
     if (options.useMemoryHardKDF && params.salt) {
       encryptionKey = await deriveSecureKey(params.key, params.salt, {
         memoryCost: options.memoryCost,
         timeCost: options.timeCost,
-        keyLength: 32
+        keyLength: 32,
       });
-      
-      ProgressTracker.updateProgress(operationId, 40, 'Secure key derived');
+
+      ProgressTracker.updateProgress(operationId, 40, "Secure key derived");
     }
-    
+
     // Step 3: Encrypt the data with multiple layers
-    ProgressTracker.nextStep(operationId, 'Encrypting data...');
-    
+    ProgressTracker.nextStep(operationId, "Encrypting data...");
+
     // Determine number of layers based on security level
     const layers = options.layers || getDefaultLayers(options.securityLevel);
-    
+
     // Track algorithms used
     const algorithms: string[] = [];
-    
+
     // Apply multiple encryption layers
     let currentData = processedData;
-    
+
     for (let i = 0; i < layers; i++) {
       ProgressTracker.updateProgress(
-        operationId, 
-        40 + Math.floor((i + 1) / layers * 40), 
+        operationId,
+        40 + Math.floor(((i + 1) / layers) * 40),
         `Applying encryption layer ${i + 1}/${layers}...`
       );
-      
+
       // Use different algorithms for each layer if rotation is enabled
-      const algorithm = options.useAlgorithmRotation 
-        ? getAlgorithmForLayer(i, layers) 
-        : 'aes-256-gcm';
-      
+      const algorithm = options.useAlgorithmRotation
+        ? getAlgorithmForLayer(i, layers)
+        : "aes-256-gcm";
+
       algorithms.push(algorithm);
-      
+
       // Derive a unique key for this layer
       const layerKey = deriveLayerKey(encryptionKey, i, algorithm);
-      
+
       // Generate initialization vector
       const iv = params.iv || crypto.randomBytes(16);
-      
+
       // Create cipher
       const cipher = crypto.createCipheriv(algorithm, layerKey, iv);
-      
+
       // Add authentication data if using GCM mode
-      if (algorithm.endsWith('-gcm') && params.aad) {
+      if (algorithm.endsWith("-gcm") && params.aad) {
         (cipher as any).setAAD(params.aad);
       }
-      
+
       // Encrypt data
       let encrypted = Buffer.concat([
         cipher.update(currentData),
-        cipher.final()
+        cipher.final(),
       ]);
-      
+
       // Get auth tag if using GCM mode
       let authTag: Buffer | undefined;
-      if (algorithm.endsWith('-gcm')) {
+      if (algorithm.endsWith("-gcm")) {
         authTag = (cipher as any).getAuthTag();
       }
-      
+
       // Prepare for next layer
       const layerData = {
         algorithm,
-        iv: iv.toString('base64'),
-        authTag: authTag ? authTag.toString('base64') : undefined,
-        data: encrypted.toString('base64'),
-        layer: i
+        iv: iv.toString("base64"),
+        authTag: authTag ? authTag.toString("base64") : undefined,
+        data: encrypted.toString("base64"),
+        layer: i,
       };
-      
+
       currentData = Buffer.from(JSON.stringify(layerData));
     }
-    
+
     // Step 4: Add post-quantum encryption if enabled
-    ProgressTracker.updateProgress(operationId, 80, 'Finalizing encryption...');
-    
+    ProgressTracker.updateProgress(operationId, 80, "Finalizing encryption...");
+
     if (options.usePostQuantum && params.postQuantumKeyPair) {
       try {
         // Use Kyber for post-quantum key encapsulation
@@ -275,77 +284,84 @@ export async function encryptWithFortify(
           params.postQuantumKeyPair.publicKey,
           { securityLevel: toFortifySecurityLevel(options.securityLevel) }
         );
-        
+
         // Use the shared secret to encrypt the data with AES
-        const sharedSecret = Buffer.from(encapsulation.sharedSecret, 'hex');
+        const sharedSecret = Buffer.from(encapsulation.sharedSecret, "hex");
         const iv = crypto.randomBytes(16);
-        const cipher = crypto.createCipheriv('aes-256-gcm', sharedSecret, iv);
-        
+        const cipher = crypto.createCipheriv("aes-256-gcm", sharedSecret, iv);
+
         // Encrypt the data
         const encrypted = Buffer.concat([
           cipher.update(currentData),
-          cipher.final()
+          cipher.final(),
         ]);
-        
+
         // Get the auth tag
         const authTag = (cipher as any).getAuthTag();
-        
+
         // Create the final encrypted data
         const pqData = {
-          type: 'post-quantum',
-          algorithm: 'kyber+aes-256-gcm',
+          type: "post-quantum",
+          algorithm: "kyber+aes-256-gcm",
           ciphertext: encapsulation.ciphertext,
-          iv: iv.toString('base64'),
-          authTag: authTag.toString('base64'),
-          data: encrypted.toString('base64')
+          iv: iv.toString("base64"),
+          authTag: authTag.toString("base64"),
+          data: encrypted.toString("base64"),
         };
-        
+
         currentData = Buffer.from(JSON.stringify(pqData));
-        algorithms.push('kyber+aes-256-gcm');
-        
-        logger.debug('Applied post-quantum encryption layer');
+        algorithms.push("kyber+aes-256-gcm");
+
+        logger.debug("Applied post-quantum encryption layer");
       } catch (error) {
-        logger.warn('Post-quantum encryption failed, using standard encryption', error);
+        logger.warn(
+          "Post-quantum encryption failed, using standard encryption",
+          error
+        );
       }
     }
-    
+
     // Step 5: Add honeypots if enabled
     if (options.addHoneypots) {
       currentData = addHoneypots(currentData);
-      logger.debug('Added honeypots to encrypted data');
+      logger.debug("Added honeypots to encrypted data");
     }
-    
+
     // Complete the operation
     const endTime = Date.now();
     const encryptionTimeMs = endTime - startTime;
-    
+
     ProgressTracker.completeOperation(
-      operationId, 
-      'Data encrypted successfully'
+      operationId,
+      "Data encrypted successfully"
     );
-    
+
     return {
       data: currentData,
       metadata: {
         algorithms,
         postQuantum: options.usePostQuantum,
         memoryHardKDF: options.useMemoryHardKDF,
-        kdfParams: options.useMemoryHardKDF ? {
-          memoryCost: options.memoryCost || 16384,
-          timeCost: options.timeCost || 4,
-          parallelism: 1
-        } : undefined,
-        encryptionTimeMs
-      }
+        kdfParams: options.useMemoryHardKDF
+          ? {
+              memoryCost: options.memoryCost || 16384,
+              timeCost: options.timeCost || 4,
+              parallelism: 1,
+            }
+          : undefined,
+        encryptionTimeMs,
+      },
     };
   } catch (error) {
     // Handle errors
     ProgressTracker.failOperation(
-      operationId, 
-      `Encryption failed: ${error instanceof Error ? error.message : String(error)}`
+      operationId,
+      `Encryption failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`
     );
-    
-    logger.error('Encryption failed', error);
+
+    logger.error("Encryption failed", error);
     throw error;
   }
 }
@@ -362,46 +378,54 @@ export async function decryptWithFortify(
   params: FortifySecurityParams,
   options: FortifyEncryptionOptions
 ): Promise<Buffer> {
-  const operationId = crypto.randomBytes(8).toString('hex');
-  
+  const operationId = crypto.randomBytes(8).toString("hex");
+
   // Start tracking the decryption operation
   ProgressTracker.startOperation(
-    OperationType.Decryption, 
-    operationId, 
+    OperationType.Decryption,
+    operationId,
     options.layers || 3
   );
-  
+
   try {
     // Step 1: Derive a secure key if memory-hard KDF is enabled
-    ProgressTracker.updateProgress(operationId, 10, 'Deriving secure key...');
+    ProgressTracker.updateProgress(operationId, 10, "Deriving secure key...");
     let decryptionKey = params.key;
-    
+
     if (options.useMemoryHardKDF && params.salt) {
       decryptionKey = await deriveSecureKey(params.key, params.salt, {
         memoryCost: options.memoryCost,
         timeCost: options.timeCost,
-        keyLength: 32
+        keyLength: 32,
       });
-      
-      ProgressTracker.updateProgress(operationId, 20, 'Secure key derived');
+
+      ProgressTracker.updateProgress(operationId, 20, "Secure key derived");
     }
-    
+
     // Step 2: Remove honeypots if present
-    ProgressTracker.updateProgress(operationId, 30, 'Processing encrypted data...');
+    ProgressTracker.updateProgress(
+      operationId,
+      30,
+      "Processing encrypted data..."
+    );
     let currentData = removeHoneypots(encryptedData);
-    
+
     // Step 3: Check for post-quantum encryption
     let parsedData: any;
-    
+
     try {
       parsedData = JSON.parse(currentData.toString());
     } catch (e) {
-      throw new Error('Invalid encrypted data format');
+      throw new Error("Invalid encrypted data format");
     }
-    
-    if (parsedData.type === 'post-quantum' && params.postQuantumKeyPair) {
-      ProgressTracker.updateProgress(operationId, 40, 'Decrypting post-quantum layer...');
-      
+
+    if (parsedData.type === "post-quantum" && params.postQuantumKeyPair) {
+      ProgressTracker.updateProgress(
+        operationId,
+        40,
+        "Decrypting post-quantum layer..."
+      );
+
       try {
         // Decapsulate the shared secret using Kyber
         const decapsulation = kyberDecapsulate(
@@ -409,76 +433,80 @@ export async function decryptWithFortify(
           parsedData.ciphertext,
           { securityLevel: toFortifySecurityLevel(options.securityLevel) }
         );
-        
+
         // Use the shared secret to decrypt the data
-        const sharedSecret = Buffer.from(decapsulation.sharedSecret, 'hex');
-        const iv = Buffer.from(parsedData.iv, 'base64');
-        const authTag = Buffer.from(parsedData.authTag, 'base64');
-        const encryptedContent = Buffer.from(parsedData.data, 'base64');
-        
+        const sharedSecret = Buffer.from(decapsulation.sharedSecret, "hex");
+        const iv = Buffer.from(parsedData.iv, "base64");
+        const authTag = Buffer.from(parsedData.authTag, "base64");
+        const encryptedContent = Buffer.from(parsedData.data, "base64");
+
         // Create decipher
-        const decipher = crypto.createDecipheriv('aes-256-gcm', sharedSecret, iv);
+        const decipher = crypto.createDecipheriv(
+          "aes-256-gcm",
+          sharedSecret,
+          iv
+        );
         (decipher as any).setAuthTag(authTag);
-        
+
         // Decrypt the data
         const decrypted = Buffer.concat([
           decipher.update(encryptedContent),
-          decipher.final()
+          decipher.final(),
         ]);
-        
+
         currentData = decrypted;
-        logger.debug('Decrypted post-quantum layer');
+        logger.debug("Decrypted post-quantum layer");
       } catch (error) {
-        logger.error('Post-quantum decryption failed', error);
-        throw new Error('Post-quantum decryption failed');
+        logger.error("Post-quantum decryption failed", error);
+        throw new Error("Post-quantum decryption failed");
       }
     }
-    
+
     // Step 4: Decrypt multiple layers
-    ProgressTracker.nextStep(operationId, 'Decrypting layers...');
-    
+    ProgressTracker.nextStep(operationId, "Decrypting layers...");
+
     // Determine number of layers based on security level
     const layers = options.layers || getDefaultLayers(options.securityLevel);
-    
+
     for (let i = layers - 1; i >= 0; i--) {
       ProgressTracker.updateProgress(
-        operationId, 
-        50 + Math.floor((layers - i) / layers * 30), 
+        operationId,
+        50 + Math.floor(((layers - i) / layers) * 30),
         `Decrypting layer ${layers - i}/${layers}...`
       );
-      
+
       try {
         // Parse the layer data
         const layerData = JSON.parse(currentData.toString());
-        
+
         // Extract encryption parameters
         const { algorithm, iv, authTag, data } = layerData;
-        
+
         // Derive the layer key
         const layerKey = deriveLayerKey(decryptionKey, i, algorithm);
-        
+
         // Create decipher
         const decipher = crypto.createDecipheriv(
-          algorithm, 
-          layerKey, 
-          Buffer.from(iv, 'base64')
+          algorithm,
+          layerKey,
+          Buffer.from(iv, "base64")
         );
-        
+
         // Set auth tag if using GCM mode
-        if (algorithm.endsWith('-gcm') && authTag) {
-          (decipher as any).setAuthTag(Buffer.from(authTag, 'base64'));
-          
+        if (algorithm.endsWith("-gcm") && authTag) {
+          (decipher as any).setAuthTag(Buffer.from(authTag, "base64"));
+
           if (params.aad) {
             (decipher as any).setAAD(params.aad);
           }
         }
-        
+
         // Decrypt data
         const decrypted = Buffer.concat([
-          decipher.update(Buffer.from(data, 'base64')),
-          decipher.final()
+          decipher.update(Buffer.from(data, "base64")),
+          decipher.final(),
         ]);
-        
+
         // Prepare for next layer
         currentData = decrypted;
       } catch (error) {
@@ -486,25 +514,30 @@ export async function decryptWithFortify(
         throw new Error(`Decryption failed at layer ${i}`);
       }
     }
-    
+
     // Step 5: Decompress if needed
-    if (options.compressionLevel !== 'none') {
-      ProgressTracker.nextStep(operationId, 'Decompressing data...');
+    if (options.compressionLevel !== "none") {
+      ProgressTracker.nextStep(operationId, "Decompressing data...");
       currentData = await decompressData(currentData);
     }
-    
+
     // Complete the operation
-    ProgressTracker.completeOperation(operationId, 'Data decrypted successfully');
-    
+    ProgressTracker.completeOperation(
+      operationId,
+      "Data decrypted successfully"
+    );
+
     return currentData;
   } catch (error) {
     // Handle errors
     ProgressTracker.failOperation(
-      operationId, 
-      `Decryption failed: ${error instanceof Error ? error.message : String(error)}`
+      operationId,
+      `Decryption failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`
     );
-    
-    logger.error('Decryption failed', error);
+
+    logger.error("Decryption failed", error);
     throw error;
   }
 }
@@ -515,12 +548,15 @@ export async function decryptWithFortify(
  * @param level - Compression level
  * @returns Promise resolving to compressed data
  */
-async function compressData(data: Buffer, level: CompressionLevel): Promise<Buffer> {
+async function compressData(
+  data: Buffer,
+  level: CompressionLevel
+): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const options: zlib.ZlibOptions = {
-      level: getZlibCompressionLevel(level)
+      level: getZlibCompressionLevel(level),
     };
-    
+
     zlib.deflate(data, options, (err, buffer) => {
       if (err) {
         reject(err);
@@ -555,12 +591,18 @@ async function decompressData(data: Buffer): Promise<Buffer> {
  */
 function getZlibCompressionLevel(level: CompressionLevel): number {
   switch (level) {
-    case 'none': return 0;
-    case 'low': return 3;
-    case 'medium': return 6;
-    case 'high': return 8;
-    case 'maximum': return 9;
-    default: return 6;
+    case "none":
+      return 0;
+    case "low":
+      return 3;
+    case "medium":
+      return 6;
+    case "high":
+      return 8;
+    case "maximum":
+      return 9;
+    default:
+      return 6;
   }
 }
 
@@ -571,10 +613,14 @@ function getZlibCompressionLevel(level: CompressionLevel): number {
  */
 function getDefaultLayers(level: SecurityLevel): number {
   switch (level) {
-    case 'standard': return 1;
-    case 'high': return 3;
-    case 'max': return 5;
-    default: return 3;
+    case "standard":
+      return 1;
+    case "high":
+      return 3;
+    case "max":
+      return 5;
+    default:
+      return 3;
   }
 }
 
@@ -587,13 +633,13 @@ function getDefaultLayers(level: SecurityLevel): number {
 function getAlgorithmForLayer(layerIndex: number, totalLayers: number): string {
   // Rotate between different algorithms for better security
   const algorithms = [
-    'aes-256-gcm',
-    'aes-256-cbc',
-    'aes-256-ctr',
-    'camellia-256-cbc',
-    'aria-256-gcm'
+    "aes-256-gcm",
+    "aes-256-cbc",
+    "aes-256-ctr",
+    "camellia-256-cbc",
+    "aria-256-gcm",
   ];
-  
+
   return algorithms[layerIndex % algorithms.length];
 }
 
@@ -604,18 +650,16 @@ function getAlgorithmForLayer(layerIndex: number, totalLayers: number): string {
  * @param algorithm - Encryption algorithm
  * @returns Derived key
  */
-function deriveLayerKey(masterKey: Buffer, layerIndex: number, algorithm: string): Buffer {
+function deriveLayerKey(
+  masterKey: Buffer,
+  layerIndex: number,
+  algorithm: string
+): Buffer {
   // Create a unique salt for this layer
   const salt = Buffer.from(`nehonix-layer-${layerIndex}-${algorithm}`);
-  
+
   // Derive key using PBKDF2
-  return crypto.pbkdf2Sync(
-    masterKey,
-    salt,
-    10000,
-    32,
-    'sha512'
-  );
+  return crypto.pbkdf2Sync(masterKey, salt, 10000, 32, "sha512");
 }
 
 /**
@@ -627,16 +671,16 @@ function addHoneypots(data: Buffer): Buffer {
   try {
     // Parse the data
     const parsed = JSON.parse(data.toString());
-    
+
     // Add honeypot fields that look like real data
-    parsed.honeypot1 = crypto.randomBytes(32).toString('base64');
-    parsed.decryptionKey = crypto.randomBytes(16).toString('base64');
+    parsed.honeypot1 = Random.getRandomBytes(32).toString("base64");
+    parsed.decryptionKey = crypto.randomBytes(16).toString("base64");
     parsed._meta = {
       timestamp: Date.now(),
-      version: '1.0.0',
-      checksum: crypto.createHash('sha256').update(data).digest('hex')
+      version: "1.0.0",
+      checksum: crypto.createHash("sha256").update(data).digest("hex"),
     };
-    
+
     return Buffer.from(JSON.stringify(parsed));
   } catch (e) {
     // If parsing fails, return original data
@@ -653,12 +697,12 @@ function removeHoneypots(data: Buffer): Buffer {
   try {
     // Parse the data
     const parsed = JSON.parse(data.toString());
-    
+
     // Remove known honeypot fields
     delete parsed.honeypot1;
     delete parsed.decryptionKey;
     delete parsed._meta;
-    
+
     return Buffer.from(JSON.stringify(parsed));
   } catch (e) {
     // If parsing fails, return original data

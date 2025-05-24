@@ -15,7 +15,7 @@ if (!fs.existsSync(OUTPUT_DIR)) {
 }
 
 // Generate a random encryption key
-const encryptionKey = crypto.randomBytes(32);
+const encryptionKey = Random.getRandomBytes(32);
 const encryptionKeyHex = encryptionKey.toString("hex");
 console.log("Encryption Key:", encryptionKeyHex.substring(0, 10) + "...");
 
